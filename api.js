@@ -22,3 +22,14 @@ let leitores = [
 ];
 
 let emprestimos = [];
+
+app.use((req, res, next) => {
+  const dataHora = new Date().toISOString();
+  console.log(`[${dataHora}] - Método: ${req.method} | URL: ${req.url}`);
+  next();
+});
+
+
+app.get('/', (req, res) => {
+  res.json({ mensagem: 'API da Biblioteca Escolar no ar!' });
+});
