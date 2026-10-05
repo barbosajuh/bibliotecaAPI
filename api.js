@@ -36,6 +36,7 @@ app.get('/', (req, res) => {
 app.get('/livros', (req, res) => {
   res.json(livros);
 });
+
 app.post('/livros', (req, res) => {
   const { titulo, autor } = req.body;
   if (!titulo || !autor) {
@@ -64,3 +65,36 @@ app.delete('/livros/:id', (req, res) => {
   res.status(204).send();
 });
 
+app.get('/leitores', (req, res) => {
+  res.json(leitores);
+});
+
+app.post('/leitores', (req, res) => {
+  const { nome, email } = req.body;
+  if (!nome || !email) {
+    return res.status(400).json({ erro: 'Nome e email são obrigatórios.' });
+  }
+  const novoLeitor = { id: leitores.length + 1, nome, email };
+  leitores.push(novoLeitor);
+  res.status(201).json(novoLeitor);
+});
+
+app.put('/leitores/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const leitor = leitores.find(l => l.id === id);
+  if (!leitor) return res.status(404).json({ erro: 'Leitor não encontrado.' });
+
+  const { nome, email } = req.body;
+  if (nome) leitor.nome = nome;
+  if (email) leitor.email = email;
+  res.json(leitor);
+});
+
+app.delete('/leitores/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const index = leitores.findIndex(l => l.id === id);
+  if (index === -1) return res.status(404).json({ erro: 'Leitor não encontrado.' });
+
+  leitores.splice(index, 1);
+  res.status(204).send();
+});
