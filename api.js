@@ -126,3 +126,53 @@ app.get('/exemplares/disponibilidade', (req, res) => {
   }
   res.json(resultado);
 });
+
+app.get('/leitores/:id/historico', (req, res) => {
+  const leitorId = Number(req.params.id);
+  const historico = emprestimos.filter(e => e.leitorId === leitorId);
+  res.json(historico);
+});
+
+app.post('/emprestimos', (req, res) => {
+  const { leitorId, exemplarId } = req.body;
+
+  const leitor = leitores.find(l => l.id === Number(leitorId));
+  if (!leitor) return res.status(404).json({ erro: 'Leitor não encontrado.' });
+
+  const exemplar = exemplares.find(e => e.id === Number(exemplarId));
+  if (!exemplar) return res.status(404).json({ erro: 'Exemplar não encontrado.' });
+
+  if (!exemplar.disponivel) {
+    return res.status(400).json({ erro: 'Este exemplar não está disponível.' });
+  }
+
+  const hoje = new Date();
+  const emprestimosAtivosLeitor = emprestimos.filter(e => e.leitorId === Number(leitorId) && !e.dataDevolucao);
+
+  const temAtraso = emprestimosAtivosLeitor.some(e => new Date(e.dataPrevista) < hoje);
+  if (temAtraso) {
+    return res.status(403).json({ erro: 'Leitor possui empréstimos em atraso e está bloqueado.' });
+  }
+
+  if (emprestimosAtivosLeitor.length >= 3) {
+    return res.status(403).json({ erro: 'Limite máximo de 3 empréstimos ativos atingido.' });
+  }
+
+  const dataEmprestimo = new Date();
+  const dataPrevista = new Date();
+  dataPrevista.setDate(dataEmprestimo.getDate() + 7); // Prazo de 7 dias
+
+  const novoEmprestimo = {
+    id: emprestimos.length + 1,
+    leitorId: Number(leitorId),
+    exemplarId: Number(exemplarId),
+    dataEmprestimo: dataEmprestimo.toISOString(),
+    dataPrevista: dataPrevista.toISOString(),
+    dataDevolucao: null,
+    multa: 0
+  };
+
+  exemplar.disponivel = false;
+  emprestimos.push(novoEmprestimo);
+  res.status(201).json(novoEmprestimo);
+});
