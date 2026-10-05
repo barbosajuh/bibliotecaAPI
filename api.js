@@ -141,28 +141,24 @@ app.post('/emprestimos', (req, res) => {
 
   const exemplar = exemplares.find(e => e.id === Number(exemplarId));
   if (!exemplar) return res.status(404).json({ erro: 'Exemplar não encontrado.' });
-
+  
   if (!exemplar.disponivel) {
     return res.status(400).json({ erro: 'Este exemplar não está disponível.' });
   }
-
   const hoje = new Date();
   const emprestimosAtivosLeitor = emprestimos.filter(e => e.leitorId === Number(leitorId) && !e.dataDevolucao);
-
   const temAtraso = emprestimosAtivosLeitor.some(e => new Date(e.dataPrevista) < hoje);
   if (temAtraso) {
     return res.status(403).json({ erro: 'Leitor possui empréstimos em atraso e está bloqueado.' });
   }
-
   if (emprestimosAtivosLeitor.length >= 3) {
     return res.status(403).json({ erro: 'Limite máximo de 3 empréstimos ativos atingido.' });
   }
-
   const dataEmprestimo = new Date();
   const dataPrevista = new Date();
   dataPrevista.setDate(dataEmprestimo.getDate() + 7); // Prazo de 7 dias
 
-  const novoEmprestimo = {
+    const novoEmprestimo = {
     id: emprestimos.length + 1,
     leitorId: Number(leitorId),
     exemplarId: Number(exemplarId),
@@ -170,9 +166,54 @@ app.post('/emprestimos', (req, res) => {
     dataPrevista: dataPrevista.toISOString(),
     dataDevolucao: null,
     multa: 0
-  };
-
+  }; 
   exemplar.disponivel = false;
   emprestimos.push(novoEmprestimo);
   res.status(201).json(novoEmprestimo);
+});
+
+app.post('/emprestimos/:id/devolver', (req, res) => {
+  const emprestimoId = Number(req.params.id);
+  const emprestimo = emprestimos.find(e => e.id === emprestimoId);
+  if (!emprestimo) return res.status(404).json({ erro: 'Empréstimo não encontrado.' });
+  if (emprestimo.dataDevolucao) return res.status(400).json({ erro: 'Este empréstimo já foi devolvido.' });
+
+  const dataDevolucaoReal = new Date();
+  emprestimo.dataDevolucao = dataDevolucaoReal.toISOString();
+
+  const dataPrevista = new Date(emprestimo.dataPrevista);
+  if (dataDevolucaoReal > dataPrevista) {
+    const diffTime = Math.abs(dataDevolucaoReal - dataPrevista);
+    const diasAtraso = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    emprestimo.multa = diasAtraso * 2.00; // R$ 2,00 por dia de atraso
+  } else {
+    emprestimo.multa = 0;
+  }
+
+  const exemplar = exemplares.find(e => e.id === emprestimo.exemplarId);
+  if (exemplar) {
+    exemplar.disponivel = true;
+  }
+  res.json({ mensagem: 'Devolução registrada com sucesso!', emprestimo });
+});
+
+app.post('/emprestimos/:id/renovar', (req, res) => {
+  const emprestimoId = Number(req.params.id);
+  const emprestimo = emprestimos.find(e => e.id === emprestimoId);
+  if (!emprestimo) return res.status(404).json({ erro: 'Empréstimo não encontrado.' });
+  if (emprestimo.dataDevolucao) return res.status(400).json({ erro: 'Não é possível renovar um livro já devolvido.' });
+
+  const novaDataPrevista = new Date(emprestimo.dataPrevista);
+  novaDataPrevista.setDate(novaDataPrevista.getDate() + 7);
+  emprestimo.dataPrevista = novaDataPrevista.toISOString();
+
+  res.json({ mensagem: 'Empréstimo renovado com sucesso!', emprestimo });
+});
+
+app.use((req, res) => {
+  res.status(404).json({ erro: 'Rota não encontrada.' });
+});
+
+app.server = app.listen(PORTA, () => {
+  console.log(`Servidor rodando em http://localhost:${PORTA}`);
 });
