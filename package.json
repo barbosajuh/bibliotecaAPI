@@ -1,0 +1,24 @@
+{
+  "name": "bibliotecaapi",
+  "version": "1.0.0",
+  "description": "",
+  "main": "api.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/barbosajuh/bibliotecaAPI.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/barbosajuh/bibliotecaAPI/issues"
+  },
+  "homepage": "https://github.com/barbosajuh/bibliotecaAPI#readme",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
