@@ -98,3 +98,31 @@ app.delete('/leitores/:id', (req, res) => {
   leitores.splice(index, 1);
   res.status(204).send();
 });
+
+app.get('/exemplares', (req, res) => {
+  res.json(exemplares);
+});
+
+app.post('/exemplares', (req, res) => {
+  const { livroId, codigo } = req.body;
+  const livroExiste = livros.some(l => l.id === Number(livroId));
+  if (!livroExiste) return res.status(404).json({ erro: 'Livro pai não encontrado.' });
+
+  const novoExemplar = {
+    id: exemplares.length + 1,
+    livroId: Number(livroId),
+    codigo,
+    disponivel: true
+  };
+  exemplares.push(novoExemplar);
+  res.status(201).json(novoExemplar);
+});
+
+app.get('/exemplares/disponibilidade', (req, res) => {
+  const { livroId } = req.query;
+  let resultado = exemplares;
+  if (livroId) {
+    resultado = exemplares.filter(e => e.livroId === Number(livroId));
+  }
+  res.json(resultado);
+});
