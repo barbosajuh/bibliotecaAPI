@@ -33,3 +33,34 @@ app.use((req, res, next) => {
 app.get('/', (req, res) => {
   res.json({ mensagem: 'API da Biblioteca Escolar no ar!' });
 });
+app.get('/livros', (req, res) => {
+  res.json(livros);
+});
+app.post('/livros', (req, res) => {
+  const { titulo, autor } = req.body;
+  if (!titulo || !autor) {
+    return res.status(400).json({ erro: 'Título e autor são obrigatórios.' });
+  }
+  const novoLivro = { id: livros.length + 1, titulo, autor };
+  livros.push(novoLivro);
+  res.status(201).json(novoLivro);
+});
+app.put('/livros/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const livro = livros.find(l => l.id === id);
+  if (!livro) return res.status(404).json({ erro: 'Livro não encontrado.' });
+
+  const { titulo, autor } = req.body;
+  if (titulo) livro.titulo = titulo;
+  if (autor) livro.autor = autor;
+  res.json(livro);
+});
+app.delete('/livros/:id', (req, res) => {
+  const id = Number(req.params.id);
+  const index = livros.findIndex(l => l.id === id);
+  if (index === -1) return res.status(404).json({ erro: 'Livro não encontrado.' });
+
+  livros.splice(index, 1);
+  res.status(204).send();
+});
+
