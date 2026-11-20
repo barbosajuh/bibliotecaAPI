@@ -4,9 +4,11 @@
   "description": "",
   "main": "api.js",
   "type": "module",
-  "scripts": {
+ "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node api.js"
+    "mongo:criar": "docker run -d --name mongo-biblioteca --restart unless-stopped -p 27017:27017 -e MONGO_INITDB_ROOT_USERNAME=admin -e MONGO_INITDB_ROOT_PASSWORD=senha_dev_123 mongo:latest",
+    "mongo": "docker start mongo-biblioteca",
+    "start": "node src/server.js"
   },
   "repository": {
     "type": "git",
